@@ -18,8 +18,8 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     //播放总时间
     CGFloat totalTime;
 }
-@property (strong, nonatomic) UIView *topToolBarView;//顶部工具条
-@property (strong, nonatomic) UIView *bottomToolBarView;//底部工具条
+@property (strong, nonatomic) UIImageView *topToolBarView;//顶部工具条
+@property (strong, nonatomic) UIImageView *bottomToolBarView;//底部工具条
 @property (strong, nonatomic) UIView *contentView;//播放的view
 @property (strong, nonatomic) UIButton *playBtn;
 @property (strong, nonatomic) UIButton *fullScreenBtn;
@@ -40,6 +40,8 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         self.urlString = urlString;
         [self initPlayer];
         [self playItemAddObservers];
+        // 添加视频播放结束通知
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.currentPlayItem];
     }
     return self;
 }
@@ -61,14 +63,14 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     [self.topToolBarView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(self.contentView).with.offset(0);
         make.right.equalTo(self.contentView).with.offset(0);
-        make.height.mas_equalTo(20);
+        make.height.mas_equalTo(50);
         make.top.equalTo(self.contentView);
     }];
     [self.contentView addSubview:self.bottomToolBarView];
     [self.bottomToolBarView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(self.contentView).with.offset(0);
         make.right.equalTo(self.contentView).with.offset(0);
-        make.height.mas_equalTo(20);
+        make.height.mas_equalTo(50);
         make.bottom.equalTo(self.contentView);
     }];
     [self bottomToolBarAddSubViews];
@@ -84,7 +86,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     [self.bottomToolBarView addSubview:self.playBtn];
     [self.playBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(self.bottomToolBarView).mas_offset(10);
-        make.bottom.equalTo(self.bottomToolBarView).mas_offset(0);
+        make.centerY.equalTo(self.bottomToolBarView.mas_centerY).offset(-1);
         make.width.mas_equalTo(40);
         make.height.mas_equalTo(40);
     }];
@@ -93,12 +95,12 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         make.left.equalTo(self.playBtn.mas_right).mas_offset(10.f);
         make.right.mas_equalTo(-40.f);
         make.centerY.equalTo(self.bottomToolBarView.mas_centerY).offset(-1);
-        make.height.mas_equalTo(10.f);
+        make.height.mas_equalTo(20.f);
     }];
     [self.bottomToolBarView addSubview:self.fullScreenBtn];
     [self.fullScreenBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.right.equalTo(self.bottomToolBarView).mas_offset(-10);
-        make.bottom.equalTo(self.bottomToolBarView).mas_offset(0);
+        make.right.equalTo(self.bottomToolBarView).mas_offset(0);
+        make.centerY.equalTo(self.bottomToolBarView.mas_centerY).offset(-1);
         make.width.mas_equalTo(40);
         make.height.mas_equalTo(40);
     }];
@@ -126,8 +128,10 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 #pragma mark - private
 - (void)play {
     if (!_isInitPlayer) {
-        [self.contentView.layer addSublayer:self.playerLayer];
-        self.playerLayer.frame = self.contentView.bounds;
+        [self.contentView.layer insertSublayer:self.playerLayer atIndex:0];
+        self.playerLayer.frame = self.contentView.layer.bounds;
+        //视频的默认填充模式，AVLayerVideoGravityResizeAspect
+        self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
         [self.player play];
         _isInitPlayer = YES;
     }else{
@@ -135,6 +139,12 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     }
 }
 
+/**
+ * 视频播放结束通知
+ */
+- (void)moviePlayDidEnd:(NSNotification *)noti {
+    self.state = DHVideoPlayStatePlayFinished;
+}
 /*
  * 增加播放时间的监听，更新播放进度
  */
@@ -235,6 +245,25 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 }
 
 #pragma mark - getter && setter
+- (void)setState:(DHVideoPlayState)state {
+    _state = state;
+    switch (_state) {
+        case DHVideoPlayStatePlayBuffering:
+            [self.loadingView startAnimating];
+            break;
+        case DHVideoPlayStatePlaying:
+            [self.loadingView stopAnimating];
+            break;
+        case DHVideoPlayStatePlayFaild:
+            [self.loadingView startAnimating];
+            break;
+        default:
+            break;
+    }
+    
+}
+
+
 - (AVPlayer *)player {
     if (!_player) {
         _player = [AVPlayer playerWithPlayerItem:self.currentPlayItem];
@@ -256,16 +285,19 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     return  _playerLayer;
 }
 
-- (UIView *)topToolBarView {
+- (UIImageView *)topToolBarView {
     if (!_topToolBarView) {
-        _topToolBarView = [[UIView alloc]init];
+        _topToolBarView = [[UIImageView alloc]init];
+        _topToolBarView.userInteractionEnabled = YES;
     }
     return _topToolBarView;
 }
 
-- (UIView *)bottomToolBarView {
+- (UIImageView *)bottomToolBarView {
     if (!_bottomToolBarView) {
-        _bottomToolBarView = [[UIView alloc]init];
+        _bottomToolBarView = [[UIImageView alloc]init];
+        _bottomToolBarView.userInteractionEnabled = YES;
+        _bottomToolBarView.image = WMPlayerImage(@"bottom_shadow");
     }
     return _bottomToolBarView;
 }
@@ -281,9 +313,12 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 - (UIButton *)playBtn {
     if (!_playBtn) {
         _playBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        _playBtn.showsTouchWhenHighlighted = YES;
         [_playBtn setImage:WMPlayerImage(@"pause") forState:UIControlStateNormal];
-        [_playBtn setImage:WMPlayerImage(@"play") forState:UIControlStateNormal];
+        [_playBtn setImage:WMPlayerImage(@"play") forState:UIControlStateSelected];
+        _playBtn.selected = YES;
         [_playBtn addTarget:self action:@selector(play) forControlEvents:UIControlEventTouchUpInside];
+        
     }
     return _playBtn;
 }
