@@ -13,19 +13,18 @@
 #define WMPlayerImage(file)      [UIImage imageNamed:WMPlayerSrcName(file)]
 static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeObservationContext;
 @interface DHVideoPlayer(){
+    //是否已经初始化player
     BOOL _isInitPlayer;
-
-    //总时间
+    //播放总时间
     CGFloat totalTime;
 }
-@property (strong, nonatomic) UIView *topToolBarView;
-@property (strong, nonatomic) UIView *bottomToolBarView;
-
-@property (strong, nonatomic) UIView *contentView;
+@property (strong, nonatomic) UIView *topToolBarView;//顶部工具条
+@property (strong, nonatomic) UIView *bottomToolBarView;//底部工具条
+@property (strong, nonatomic) UIView *contentView;//播放的view
 @property (strong, nonatomic) UIButton *playBtn;
 @property (strong, nonatomic) UIButton *fullScreenBtn;
-@property (strong,  nonatomic) UISlider *progressSlider;
-@property (strong, nonatomic) UIProgressView *loadingProgress;
+@property (strong,  nonatomic) UISlider *progressSlider;//播放进度条，可以拖拽快进或后退
+@property (strong, nonatomic) UIProgressView *loadingProgress;//缓存进度条
 
 @property (copy, nonatomic) NSString *urlString;
 @property (strong, nonatomic) UIActivityIndicatorView *loadingView;
@@ -115,6 +114,9 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     
 }
 
+/**
+ * 监听playerItem的status 、loadedTimeRanges、duration(视频时长)等属性的变化
+ */
 - (void)playItemAddObservers {
     [self.currentPlayItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:PlayerViewStatusChangeObservationContext];
     [self.currentPlayItem addObserver:self forKeyPath:@"loadedTimeRanges" options:NSKeyValueObservingOptionNew context:PlayerViewStatusChangeObservationContext];
@@ -124,7 +126,6 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 #pragma mark - private
 - (void)play {
     if (!_isInitPlayer) {
-//        [self.contentView]
         [self.contentView.layer addSublayer:self.playerLayer];
         self.playerLayer.frame = self.contentView.bounds;
         [self.player play];
@@ -135,7 +136,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 }
 
 /*
- * 监听播放时间
+ * 增加播放时间的监听，更新播放进度
  */
 - (void)initTimer {
     double interval = .1f;
@@ -150,12 +151,13 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         float minValue = [weakSelf.progressSlider minimumValue];
         float maxValue = [weakSelf.progressSlider maximumValue];
         [weakSelf.progressSlider setValue:(maxValue - minValue) * nowTime / totalTime + minValue];
-
     }];
-//    [self.progressSlider setValue:(maxValue - minValue) * nowTime / totalTime + minValue];
-    
 }
 
+
+/**
+ * 获取播放总时长
+ */
 - (CMTime)playerItemDuration {
     AVPlayerItem *playerItem = self.currentPlayItem;
     if (playerItem.status == AVPlayerItemStatusReadyToPlay){
@@ -164,6 +166,9 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     return(kCMTimeInvalid);
 }
 
+/**
+ * 播放或暂停
+ */
 - (void)playOrpause {
 //    [self play];
 }
@@ -228,8 +233,6 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     NSTimeInterval result     = startSeconds + durationSeconds;// 计算缓冲总进度
     return result;
 }
-
-
 
 #pragma mark - getter && setter
 - (AVPlayer *)player {
