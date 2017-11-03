@@ -1,0 +1,35 @@
+//
+//  Health.pch
+//  Health
+//
+//  Created by DuHongXing on 2017/10/26.
+//  Copyright © 2017年 duxing. All rights reserved.
+//
+
+#ifndef Health_pch
+#define Health_pch
+#import "Font.h"
+//#import "YYKit.h"
+#import "DHWindowManager.h"
+#import "ColorConst.h"
+#import "UtilsMacro.h"
+#import "PathMacro.h"
+#import "NSString+Additional.h"
+#import "UIView+Toast.h"
+#import "UIView+Additional.h"
+#import "Helper+Validate.h"
+#import "Helper+UIView.h"
+#import "UITableView+Style.h"
+#import "HTGlobal.h"
+#import "GeneralMarco.h"
+#import "FTRequestConfig.h"
+#import "WQFactoryUI.h"
+#import "Helper+AttributeString.h"
+#define ScreenWidth [UIScreen mainScreen].bounds.size.width
+#define ScreenHeight [UIScreen mainScreen].bounds.size.height
+#define kNetworkError @"网络错误"
+#define UIColorFromRGB(rgbValue) [UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0f green:((float)((rgbValue & 0xFF00) >> 8))/255.0f blue:((float)(rgbValue & 0xFF))/255.0f alpha:1.0]
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+#endif /* Health_pch */
