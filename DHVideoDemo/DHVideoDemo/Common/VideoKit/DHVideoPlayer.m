@@ -157,6 +157,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         //视频的默认填充模式，AVLayerVideoGravityResizeAspect
         self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
         [self.player play];
+        self.playBtn.selected = NO;
         _isInitPlayer = YES;
     }else{
         [self playOrpause];
@@ -174,10 +175,17 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     }];
  }
 /**
- * 视频播放结束通知
+ * 视频播放结束收到通知后相应的处理
  */
 - (void)moviePlayDidEnd:(NSNotification *)noti {
     self.state = DHVideoPlayStatePlayFinished;
+    self.playBtn.selected = YES;
+    [self.player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+        
+    }];
+//    [self.player seekToTime:kCMTimeZero completionHandler:^(BOOL finished) {
+//
+//    }];
 }
 
 /*
@@ -219,7 +227,15 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
  * 播放或暂停
  */
 - (void)playOrpause {
-//    [self play];
+    if (self.state == DHVideoPlayStatePlaying) {
+        [self.player pause];
+        self.state = DHVideoPlayStatePlayStop;
+        self.playBtn.selected = YES;
+    }else if (self.state == DHVideoPlayStatePlayStop || self.state == DHVideoPlayStatePlayFaild || self.state == DHVideoPlayStatePlayFinished){
+        [self.player play];
+        self.state = DHVideoPlayStatePlaying;
+        self.playBtn.selected = NO;
+    }
 }
 /**
  *监听当前播放项的属性更新进度等
@@ -259,9 +275,9 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
                     
                     break;
                 case AVPlayerStatusFailed:
-                    
+                    self.state = DHVideoPlayStatePlayFaild;
+                    self.playBtn.selected = YES;
                     break;
-
                 default:
                     break;
             }
