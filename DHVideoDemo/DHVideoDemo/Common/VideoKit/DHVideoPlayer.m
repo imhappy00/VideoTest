@@ -25,12 +25,17 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 @property (strong, nonatomic) UIButton *fullScreenBtn;
 @property (strong,  nonatomic) UISlider *progressSlider;//播放进度条，可以拖拽快进或后退
 @property (strong, nonatomic) UIProgressView *loadingProgress;//缓存进度条
+@property (strong, nonatomic) UILabel *beginTimeLabel;
+@property (strong, nonatomic) UILabel *totalTimeLabel;
 
 @property (copy, nonatomic) NSString *urlString;
 @property (strong, nonatomic) UIActivityIndicatorView *loadingView;
 
+@property (nonatomic, strong)NSDateFormatter *dateFormatter;
 //监听播放起状态的监听者
 @property (nonatomic ,strong) id playbackTimeObserver;
+//是否正在拖拽进度条滑块
+@property (assign, nonatomic) BOOL isSliderDraging;
 @end
 @implementation DHVideoPlayer
 
@@ -111,6 +116,25 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         make.right.mas_equalTo(-40.f);
         make.centerY.equalTo(self.bottomToolBarView.mas_centerY).offset(-1);
     }];
+    
+    [self.bottomToolBarView addSubview:self.beginTimeLabel];
+    [self.beginTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(self.playBtn.mas_right).mas_offset(0);
+        make.bottom.equalTo(self.bottomToolBarView);
+        make.height.mas_equalTo(20);
+        make.width.mas_equalTo(60);
+    }];
+    
+    [self.bottomToolBarView addSubview:self.totalTimeLabel];
+    [self.totalTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.right.equalTo(self.bottomToolBarView);
+        make.bottom.equalTo(self.bottomToolBarView);
+        make.height.mas_equalTo(20);
+        make.width.mas_equalTo(60);
+    }];
+    
+    
+    
 }
 - (void)topToolBarAddSubViews {
     
@@ -140,11 +164,22 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 }
 
 /**
+ * 滑块的拖拽的拖拽事件实现视频的快进或后退
+ */
+- (void)sliderDragingAction:(UISlider *)slider {
+    self.isSliderDraging = YES;
+    __weak typeof (self) weakSelf = self;
+    [self.player seekToTime:CMTimeMakeWithSeconds(slider.value, weakSelf.currentPlayItem.currentTime.timescale) completionHandler:^(BOOL finished) {
+        weakSelf.isSliderDraging = NO;
+    }];
+ }
+/**
  * 视频播放结束通知
  */
 - (void)moviePlayDidEnd:(NSNotification *)noti {
     self.state = DHVideoPlayStatePlayFinished;
 }
+
 /*
  * 增加播放时间的监听，更新播放进度
  */
@@ -157,13 +192,17 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     }
     __weak typeof (self) weakSelf = self;
     self.playbackTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMakeWithSeconds(1, NSEC_PER_SEC) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
-        long long nowTime = weakSelf.currentPlayItem.currentTime.value/weakSelf.currentPlayItem.currentTime.timescale;
-        float minValue = [weakSelf.progressSlider minimumValue];
-        float maxValue = [weakSelf.progressSlider maximumValue];
-        [weakSelf.progressSlider setValue:(maxValue - minValue) * nowTime / totalTime + minValue];
+        if (weakSelf.isSliderDraging) {
+            
+        }else{
+            long long nowTime = weakSelf.currentPlayItem.currentTime.value/weakSelf.currentPlayItem.currentTime.timescale;
+            float minValue = [weakSelf.progressSlider minimumValue];
+            float maxValue = [weakSelf.progressSlider maximumValue];
+            weakSelf.beginTimeLabel.text = [weakSelf convertTime:(CGFloat)CMTimeGetSeconds(weakSelf.currentPlayItem.currentTime)];
+            [weakSelf.progressSlider setValue:(maxValue - minValue) * nowTime / totalTime + minValue];
+        }
     }];
 }
-
 
 /**
  * 获取播放总时长
@@ -192,6 +231,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
             if ((CGFloat)CMTimeGetSeconds(self.currentPlayItem.duration) != totalTime) {
                 totalTime = (CGFloat)CMTimeGetSeconds(self.currentPlayItem.duration);
                 self.progressSlider.maximumValue = totalTime;
+                self.totalTimeLabel.text = [self convertTime:totalTime];
             }
         }else if ([keyPath isEqualToString:@"loadedTimeRanges"]){
             // 计算缓冲进度
@@ -230,6 +270,23 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     }
 }
 
+- (NSString *)convertTime:(float)second {
+    NSDate *d = [NSDate dateWithTimeIntervalSince1970:second];
+    if (second/3600 >= 1) {
+        [[self dateFormatter] setDateFormat:@"HH:mm:ss"];
+    } else {
+        [[self dateFormatter] setDateFormat:@"mm:ss"];
+    }
+    return [[self dateFormatter] stringFromDate:d];
+}
+
+- (NSDateFormatter *)dateFormatter {
+    if (!_dateFormatter) {
+        _dateFormatter = [[NSDateFormatter alloc] init];
+        _dateFormatter.timeZone = [NSTimeZone timeZoneWithName:@"GMT"];
+    }
+    return _dateFormatter;
+}
 /**
  *  计算缓冲进度
  *
@@ -260,7 +317,6 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         default:
             break;
     }
-    
 }
 
 
@@ -342,7 +398,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         _progressSlider.minimumTrackTintColor = [UIColor greenColor];
         _progressSlider.maximumTrackTintColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:0.5];
         _progressSlider.value = 0.0;//指定初始值
-
+        [_progressSlider addTarget:self action:@selector(sliderDragingAction:) forControlEvents:UIControlEventTouchDragInside];
     }
     return _progressSlider;
 }
@@ -362,5 +418,25 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         [_loadingProgress setProgress:0.0 animated:NO];
     }
     return _loadingProgress;
+}
+
+- (UILabel *)beginTimeLabel {
+    if (!_beginTimeLabel) {
+        _beginTimeLabel = [[UILabel alloc]init];
+        _beginTimeLabel.textAlignment = NSTextAlignmentCenter;
+        _beginTimeLabel.textColor = kWhiteColor;
+        _beginTimeLabel.text = @"00:00";
+    }
+    
+    return _beginTimeLabel;
+}
+- (UILabel *)totalTimeLabel {
+    if (!_totalTimeLabel) {
+        _totalTimeLabel = [[UILabel alloc]init];
+        _totalTimeLabel.textAlignment = NSTextAlignmentCenter;
+        _totalTimeLabel.textColor = kWhiteColor;
+        _totalTimeLabel.text = @"00:00";
+    }
+    return _totalTimeLabel;
 }
 @end
