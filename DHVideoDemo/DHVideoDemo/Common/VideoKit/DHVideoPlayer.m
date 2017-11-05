@@ -8,6 +8,7 @@
 
 #import "DHVideoPlayer.h"
 #import <Masonry/Masonry.h>
+
 #define WMPlayerSrcName(file) [@"WMPlayer.bundle" stringByAppendingPathComponent:file]
 #define WMPlayerImage(file)      [UIImage imageNamed:WMPlayerSrcName(file)]
 static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeObservationContext;
@@ -16,13 +17,25 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     BOOL _isInitPlayer;
     //播放总时间
     CGFloat totalTime;
+    DHControlPlayType _controlType;
+    //开始触摸的位置
+    CGPoint _touchBeginPoint;
+    //触摸开始亮度
+    float _touchBeginLightValue;
+    //触摸开始的音量
+    float _touchBeginVoiceValue;
+    //触摸开始的进度
+    float _touchBeginProgressValue;
+    
 }
 @property (strong, nonatomic) UIImageView *topToolBarView;//顶部工具条
 @property (strong, nonatomic) UIImageView *bottomToolBarView;//底部工具条
 @property (strong, nonatomic) UIView *contentView;//播放的view
 @property (strong, nonatomic) UIButton *playBtn;
 @property (strong, nonatomic) UIButton *fullScreenBtn;
-@property (strong,  nonatomic) UISlider *progressSlider;//播放进度条，可以拖拽快进或后退
+@property (strong,  nonatomic) UISlider *progressSlider;//播放进度滑块，可以拖拽快进或后退
+@property (strong, nonatomic) UISlider *volumeSlider;//声音滑块用来调节声音的大小
+
 @property (strong, nonatomic) UIProgressView *loadingProgress;//缓存进度条
 @property (strong, nonatomic) UILabel *beginTimeLabel;
 @property (strong, nonatomic) UILabel *totalTimeLabel;
@@ -60,6 +73,14 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         make.edges.equalTo(self);
     }];
     [self contentViewAddSubViews];
+    
+    MPVolumeView *volumeView = [[MPVolumeView alloc]init];
+    for (UIControl *view in volumeView.subviews) {
+        if ([view.superclass isSubclassOfClass:[UISlider class]]) {
+            self.volumeSlider = (UISlider *)view;
+            self.volumeSlider.value = 1;
+        }
+    }
 }
 
 - (void)contentViewAddSubViews {
@@ -145,6 +166,71 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     [self.currentPlayItem addObserver:self forKeyPath:@"duration" options:NSKeyValueObservingOptionNew context:PlayerViewStatusChangeObservationContext];
  }
 
+#pragma mark - touchs
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = (UITouch *)touches.anyObject;
+    if (touches.count > 1 || [touch tapCount] > 1 || event.allTouches.count > 1) {
+        return;
+    }
+    _touchBeginPoint = [touch locationInView:self];
+    //亮度
+    _touchBeginLightValue = [UIScreen mainScreen].brightness;
+    //声音
+    _touchBeginVoiceValue = _volumeSlider.value;
+    //进度
+    _touchBeginProgressValue = self.progressSlider.value;
+}
+
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    CGPoint tempPoint = [touches.anyObject locationInView:self];
+    
+    float tan = fabs(tempPoint.y - _touchBeginPoint.y)/fabs(tempPoint.x - _touchBeginPoint.x);
+    //小于30度角为调节进度
+    if (tan < 1/ sqrt(3)) {
+        _controlType = DHControlPlayProgressType;
+    }else{
+        if (tempPoint.x > self.bounds.size.width/2){
+            _controlType = DHControlPlayLightType;
+        }else{
+            _controlType = DHControlPlayVoiceType;
+        }
+    }
+    
+    if (_controlType == DHControlPlayProgressType) {
+        double progressValue = _touchBeginProgressValue + self.progressSlider.maximumValue * (tempPoint.x - _touchBeginPoint.x)/self.bounds.size.width;
+        if (progressValue < self.progressSlider.maximumValue) {
+            [self.progressSlider setValue:progressValue animated:YES];
+            [self seekToTimeToPlay:progressValue];
+        }else{
+            progressValue = 0.0;
+            [self.progressSlider setValue:progressValue animated:NO];
+            [self seekToTimeToPlay:progressValue];
+        }
+    }else if (_controlType == DHControlPlayLightType) {
+        float lightValue = _touchBeginLightValue - (tempPoint.y - _touchBeginPoint.y)/self.bounds.size.height;
+        if (lightValue < 1) {
+            [UIScreen mainScreen].brightness = lightValue;
+        }else {
+            [UIScreen mainScreen].brightness = 1;
+        }
+    }else if (_controlType == DHControlPlayVoiceType){
+        float voiceValue = _touchBeginVoiceValue - (tempPoint.y - _touchBeginPoint.y)/self.bounds.size.height;
+        if (voiceValue < 1) {
+            self.volumeSlider.value = voiceValue;
+        }else {
+            self.volumeSlider.value = 1;
+        }
+    }
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    
+}
+
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    
+}
+
 #pragma mark - private
 - (void)play {
     if (!_isInitPlayer) {
@@ -160,6 +246,22 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         [self playOrpause];
     }
 }
+
+- (void)seekToTimeToPlay:(double)time {
+    if (self.player&&self.player.currentItem.status == AVPlayerItemStatusReadyToPlay) {
+        if (time>=totalTime) {
+            time = 0.0;
+        }
+        if (time<0) {
+            time=0.0;
+        }
+        __weak typeof(self) weakSelf = self;
+        [self.player seekToTime:CMTimeMakeWithSeconds(time, weakSelf.currentPlayItem.currentTime.timescale) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+            
+        }];
+    }
+}
+
 
 /**
  * 滑块的拖拽的拖拽事件实现视频的快进或后退
