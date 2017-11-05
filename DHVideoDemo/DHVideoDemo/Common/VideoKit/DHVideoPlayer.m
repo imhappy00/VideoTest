@@ -9,7 +9,6 @@
 #import "DHVideoPlayer.h"
 #import <Masonry/Masonry.h>
 #define WMPlayerSrcName(file) [@"WMPlayer.bundle" stringByAppendingPathComponent:file]
-//#define WMPlayerFrameworkSrcName(file) [@"Frameworks/WMPlayer.framework/WMPlayer.bundle" stringByAppendingPathComponent:file]
 #define WMPlayerImage(file)      [UIImage imageNamed:WMPlayerSrcName(file)]
 static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeObservationContext;
 @interface DHVideoPlayer(){
@@ -133,13 +132,10 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         make.width.mas_equalTo(60);
     }];
     
-    
-    
 }
 - (void)topToolBarAddSubViews {
     
 }
-
 /**
  * 监听playerItem的status 、loadedTimeRanges、duration(视频时长)等属性的变化
  */
@@ -156,6 +152,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         self.playerLayer.frame = self.contentView.layer.bounds;
         //视频的默认填充模式，AVLayerVideoGravityResizeAspect
         self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+//        [self.player]
         [self.player play];
         self.playBtn.selected = NO;
         _isInitPlayer = YES;
@@ -277,6 +274,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
                 case AVPlayerStatusFailed:
                     self.state = DHVideoPlayStatePlayFaild;
                     self.playBtn.selected = YES;
+                    [self.loadingView stopAnimating];
                     break;
                 default:
                     break;

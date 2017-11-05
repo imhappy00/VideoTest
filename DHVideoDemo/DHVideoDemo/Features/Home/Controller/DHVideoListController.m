@@ -25,7 +25,7 @@
 #pragma mark - getter && setter
 - (DHVideoPlayer *)player {
     if (!_player) {
-        _player = [[DHVideoPlayer alloc]initWithFrame:CGRectMake((ScreenWidth - 300)/2, 100, 300, 200) urlString:@"https://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4"];
+        _player = [[DHVideoPlayer alloc]initWithFrame:CGRectMake((ScreenWidth - 300)/2, 100, 300, 200) urlString:@"https://mirror.aarnet.edu.au/pub/TED-talks/911Mothers_2010W-480p.mp4"];
     }
     return _player;
 }
