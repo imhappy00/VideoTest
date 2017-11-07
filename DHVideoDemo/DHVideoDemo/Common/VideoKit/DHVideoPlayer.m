@@ -8,7 +8,7 @@
 
 #import "DHVideoPlayer.h"
 #import <Masonry/Masonry.h>
-
+#import "DHLoaderUrlVideoHelper.h"
 #define WMPlayerSrcName(file) [@"WMPlayer.bundle" stringByAppendingPathComponent:file]
 #define WMPlayerImage(file)      [UIImage imageNamed:WMPlayerSrcName(file)]
 static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeObservationContext;
@@ -48,6 +48,11 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 @property (nonatomic ,strong) id playbackTimeObserver;
 //是否正在拖拽进度条滑块
 @property (assign, nonatomic) BOOL isSliderDraging;
+
+@property (nonatomic, strong) AVURLAsset     *videoURLAsset;
+@property (nonatomic, strong) AVAsset        *videoAsset;
+@property (nonatomic, strong) DHLoaderUrlVideoHelper *resouerLoader;
+
 @end
 @implementation DHVideoPlayer
 
@@ -255,9 +260,11 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         if (time<0) {
             time=0.0;
         }
+        [self.player pause];
         __weak typeof(self) weakSelf = self;
         [self.player seekToTime:CMTimeMakeWithSeconds(time, weakSelf.currentPlayItem.currentTime.timescale) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
-            
+            __strong __typeof(weakSelf)strongSelf = weakSelf;
+            [strongSelf.player play];
         }];
     }
 }
@@ -270,7 +277,8 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
     self.isSliderDraging = YES;
     __weak typeof (self) weakSelf = self;
     [self.player seekToTime:CMTimeMakeWithSeconds(slider.value, weakSelf.currentPlayItem.currentTime.timescale) completionHandler:^(BOOL finished) {
-        weakSelf.isSliderDraging = NO;
+        __strong __typeof(weakSelf)strongSelf = weakSelf;
+        strongSelf.isSliderDraging = NO;
     }];
  }
 /**
@@ -445,7 +453,13 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 
 - (AVPlayerItem *)currentPlayItem {
     if(!_currentPlayItem) {
-        _currentPlayItem = [[AVPlayerItem alloc]initWithURL:[NSURL URLWithString:self.urlString]];
+        NSURL *playUrl  = [self.resouerLoader getSchemeVideoURL:[NSURL URLWithString:self.urlString]];
+        self.videoURLAsset   = [AVURLAsset URLAssetWithURL:playUrl options:nil];
+//        self.resouerLoader.delegate = self;
+        
+        [self.videoURLAsset.resourceLoader setDelegate:self.resouerLoader queue:dispatch_get_main_queue()];
+        _currentPlayItem = [AVPlayerItem playerItemWithAsset:self.videoURLAsset];
+
     }
     return  _currentPlayItem;
 }
@@ -554,5 +568,12 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         _totalTimeLabel.text = @"00:00";
     }
     return _totalTimeLabel;
+}
+
+- (DHLoaderUrlVideoHelper *)resouerLoader {
+    if (!_resouerLoader) {
+        _resouerLoader = [[DHLoaderUrlVideoHelper alloc]init];
+    }
+    return _resouerLoader;
 }
 @end

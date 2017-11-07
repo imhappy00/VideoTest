@@ -58,6 +58,8 @@
 		0E6289741FAAEB0700E4460A /* DHMineViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E6289731FAAEB0700E4460A /* DHMineViewController.m */; };
 		0E6289771FAAEB4000E4460A /* DHTopicViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E6289761FAAEB4000E4460A /* DHTopicViewController.m */; };
 		0E62897E1FAAEF1E00E4460A /* DHVideoPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E62897D1FAAEF1E00E4460A /* DHVideoPlayer.m */; };
+		0E7C36A11FB1B38500A952E8 /* DHVideoRequestTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E7C36A01FB1B38500A952E8 /* DHVideoRequestTask.m */; };
+		0E7C36A41FB2090700A952E8 /* DHLoaderUrlVideoHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E7C36A31FB2090700A952E8 /* DHLoaderUrlVideoHelper.m */; };
 		0ECD85541FAB828C00445246 /* WMPlayer.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 0ECD85531FAB828C00445246 /* WMPlayer.bundle */; };
 		AB7EEF5AEE471584612C4DC6 /* libPods-DHVideoDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD3145406120BDC803A84BC /* libPods-DHVideoDemo.a */; };
 		C2E014861C8276B830E3B5AA /* libPods-DHVideoDemoUITests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CEF40C9A56931C7139166635 /* libPods-DHVideoDemoUITests.a */; };
@@ -180,6 +182,10 @@
 		0E6289761FAAEB4000E4460A /* DHTopicViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DHTopicViewController.m; sourceTree = "<group>"; };
 		0E62897C1FAAEF1E00E4460A /* DHVideoPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DHVideoPlayer.h; sourceTree = "<group>"; };
 		0E62897D1FAAEF1E00E4460A /* DHVideoPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DHVideoPlayer.m; sourceTree = "<group>"; };
+		0E7C369F1FB1B38500A952E8 /* DHVideoRequestTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DHVideoRequestTask.h; sourceTree = "<group>"; };
+		0E7C36A01FB1B38500A952E8 /* DHVideoRequestTask.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DHVideoRequestTask.m; sourceTree = "<group>"; };
+		0E7C36A21FB2090700A952E8 /* DHLoaderUrlVideoHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DHLoaderUrlVideoHelper.h; sourceTree = "<group>"; };
+		0E7C36A31FB2090700A952E8 /* DHLoaderUrlVideoHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DHLoaderUrlVideoHelper.m; sourceTree = "<group>"; };
 		0ECD85531FAB828C00445246 /* WMPlayer.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = WMPlayer.bundle; sourceTree = "<group>"; };
 		11B07A9A9402C56A5589651D /* Pods-DHVideoDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DHVideoDemo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DHVideoDemo/Pods-DHVideoDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		67D2ED0E05D37CEF9C487BBB /* Pods-DHVideoDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DHVideoDemo.release.xcconfig"; path = "Pods/Target Support Files/Pods-DHVideoDemo/Pods-DHVideoDemo.release.xcconfig"; sourceTree = "<group>"; };
@@ -678,6 +684,10 @@
 				0ECD85531FAB828C00445246 /* WMPlayer.bundle */,
 				0E62897C1FAAEF1E00E4460A /* DHVideoPlayer.h */,
 				0E62897D1FAAEF1E00E4460A /* DHVideoPlayer.m */,
+				0E7C369F1FB1B38500A952E8 /* DHVideoRequestTask.h */,
+				0E7C36A01FB1B38500A952E8 /* DHVideoRequestTask.m */,
+				0E7C36A21FB2090700A952E8 /* DHLoaderUrlVideoHelper.h */,
+				0E7C36A31FB2090700A952E8 /* DHLoaderUrlVideoHelper.m */,
 			);
 			path = VideoKit;
 			sourceTree = "<group>";
@@ -911,6 +921,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E7C36A41FB2090700A952E8 /* DHLoaderUrlVideoHelper.m in Sources */,
+				0E7C36A11FB1B38500A952E8 /* DHVideoRequestTask.m in Sources */,
 				0E6289641FAAE89A00E4460A /* BaseNavigationController.m in Sources */,
 				0E6289271FAAE78100E4460A /* UIView+Empty.m in Sources */,
 				0E62891F1FAAE78000E4460A /* UIAlertView+Blocks.m in Sources */,
