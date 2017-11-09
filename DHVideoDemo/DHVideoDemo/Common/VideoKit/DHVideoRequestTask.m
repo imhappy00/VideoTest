@@ -33,14 +33,19 @@
 }
 
 - (void)setUrl:(NSURL *)url offset:(NSUInteger)offset {
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc]initWithURL:self.url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:20.f];
+    _url = url;
+    _offset = offset;
+    NSURLComponents *actualURLComponents = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
+    actualURLComponents.scheme = @"https";
+    
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[actualURLComponents URL] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:20.0];
     _downLoadingOffset = 0;
     if (self.videoConnectionTask && self.videoConnectionTask.state != NSURLSessionTaskStateCompleted) {
          [[NSFileManager defaultManager] removeItemAtPath:self.tempPath error:nil];
     }
     
     if (_offset > 0 && _videoLength >0) {
-        [request addValue:[NSString stringWithFormat:@"bytes=%ld-%ld",self.offset,self.videoLength - 1] forHTTPHeaderField:@"Range"];
+        [request addValue:[NSString stringWithFormat:@"bytes=%ld-%ld",(unsigned long)self.offset,(unsigned long)self.videoLength - 1] forHTTPHeaderField:@"Range"];
     }
     self.videoSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[NSOperationQueue mainQueue]];
     
@@ -52,7 +57,7 @@
     [self.videoConnectionTask cancel];
 }
 
-#pragma mark - NSURLConnectionDataDelegate
+#pragma mark - NSURLSessionDelegate
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
 didReceiveResponse:(NSURLResponse *)response
  completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
@@ -140,13 +145,17 @@ didFinishDownloadingToURL:(NSURL *)location {
 
 - (void)continueLoading {
     self.once = YES;
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc]initWithURL:self.url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:20.f];
-    if (_offset > 0 && _videoLength >0) {
-        [request addValue:[NSString stringWithFormat:@"bytes=%ld-%ld",self.offset,self.videoLength - 1] forHTTPHeaderField:@"Range"];
-    }
+    NSURLComponents *actualURLComponents = [[NSURLComponents alloc] initWithURL:_url resolvingAgainstBaseURL:NO];
+    actualURLComponents.scheme = @"http";
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[actualURLComponents URL] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:20.0];
+    
+    [request addValue:[NSString stringWithFormat:@"bytes=%ld-%ld",(unsigned long)_downLoadingOffset, (unsigned long)self.videoLength - 1] forHTTPHeaderField:@"Range"];
+    
+    
     [self.videoConnectionTask cancel];
-    self.videoSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[NSOperationQueue mainQueue]];
+//    self.videoSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[NSOperationQueue mainQueue]];
     self.videoConnectionTask = [self.videoSession downloadTaskWithRequest:request];
+    
     [self.videoConnectionTask resume];
 }
 @end

@@ -454,12 +454,9 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 - (AVPlayerItem *)currentPlayItem {
     if(!_currentPlayItem) {
         NSURL *playUrl  = [self.resouerLoader getSchemeVideoURL:[NSURL URLWithString:self.urlString]];
-        self.videoURLAsset   = [AVURLAsset URLAssetWithURL:playUrl options:nil];
-//        self.resouerLoader.delegate = self;
-        
+        self.videoURLAsset  = [[AVURLAsset alloc]initWithURL:playUrl options:nil];
         [self.videoURLAsset.resourceLoader setDelegate:self.resouerLoader queue:dispatch_get_main_queue()];
         _currentPlayItem = [AVPlayerItem playerItemWithAsset:self.videoURLAsset];
-
     }
     return  _currentPlayItem;
 }

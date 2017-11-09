@@ -142,7 +142,7 @@
 - (NSURL *)getSchemeVideoURL:(NSURL *)url
 {
     NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
-    components.scheme = @"https";
+    components.scheme = @"streaming";
     return [components URL];
 }
 #pragma mark - DHVideoRequestTaskDelegate
