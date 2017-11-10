@@ -32,22 +32,20 @@
     return self;
 }
 
-- (void)setUrl:(NSURL *)url offset:(NSUInteger)offset {
+- (void)setUrl:(NSURL *)url offset:(NSUInteger)offset length:(NSUInteger)length {
     _url = url;
     _offset = offset;
     NSURLComponents *actualURLComponents = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
-    actualURLComponents.scheme = @"https";
+    actualURLComponents.scheme = @"http";
     
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[actualURLComponents URL] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:20.0];
     _downLoadingOffset = 0;
     if (self.videoConnectionTask && self.videoConnectionTask.state != NSURLSessionTaskStateCompleted) {
          [[NSFileManager defaultManager] removeItemAtPath:self.tempPath error:nil];
     }
+    [request addValue:[NSString stringWithFormat:@"bytes=%zd-%zd",(unsigned long)self.offset,(unsigned long)length -1] forHTTPHeaderField:@"Range"];
     
-    if (_offset > 0 && _videoLength >0) {
-        [request addValue:[NSString stringWithFormat:@"bytes=%ld-%ld",(unsigned long)self.offset,(unsigned long)self.videoLength - 1] forHTTPHeaderField:@"Range"];
-    }
-    self.videoSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[NSOperationQueue mainQueue]];
+//    self.videoSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[  mainQueue]];
     
     self.videoConnectionTask = [self.videoSession downloadTaskWithRequest:request];
     [self.videoConnectionTask resume];
@@ -99,18 +97,18 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
 didFinishDownloadingToURL:(NSURL *)location {
-    NSLog(@"》》》》》完成下载");
-    self.isFinishedLoad = YES;
-    NSString *documentPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-    NSString *movePath = [documentPath stringByAppendingPathComponent:@"local.mp4"];
-    [[NSFileManager defaultManager] createFileAtPath:movePath contents:nil attributes:nil];
-    BOOL isSuccess = [[NSFileManager defaultManager]copyItemAtPath:self.tempPath toPath:movePath error:nil];
-    if (isSuccess) {
-        //TODO
-    }
-    if ([self.delegate respondsToSelector:@selector(didFinishLoadingWithTask:)]) {
-        [self.delegate didFinishLoadingWithTask:self];
-    }
+//    NSLog(@"》》》》》完成下载");
+//    self.isFinishedLoad = YES;
+//    NSString *documentPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+//    NSString *movePath = [documentPath stringByAppendingPathComponent:@"local.mp4"];
+//    [[NSFileManager defaultManager] createFileAtPath:movePath contents:nil attributes:nil];
+//    BOOL isSuccess = [[NSFileManager defaultManager]copyItemAtPath:self.tempPath toPath:movePath error:nil];
+//    if (isSuccess) {
+//        //TODO
+//    }
+//    if ([self.delegate respondsToSelector:@selector(didFinishLoadingWithTask:)]) {
+//        [self.delegate didFinishLoadingWithTask:self];
+//    }
 }
 
 //网络中断：-1005
@@ -129,6 +127,22 @@ didFinishDownloadingToURL:(NSURL *)location {
     }
     if (error.code == -1009) {
         NSLog(@"无网络连接");
+    }
+}
+#pragma mark 下载完成 无论成功失败
+-(void)URLSession:(NSURLSession *)session task: (NSURLSessionTask *)task didCompleteWithError:(NSError *)error
+{
+    NSLog(@"》》》》》完成下载");
+    self.isFinishedLoad = YES;
+    NSString *documentPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSString *movePath = [documentPath stringByAppendingPathComponent:@"local.mp4"];
+    [[NSFileManager defaultManager] createFileAtPath:movePath contents:nil attributes:nil];
+    BOOL isSuccess = [[NSFileManager defaultManager]copyItemAtPath:self.tempPath toPath:movePath error:nil];
+    if (isSuccess) {
+        //TODO
+    }
+    if ([self.delegate respondsToSelector:@selector(didFinishLoadingWithTask:)]) {
+        [self.delegate didFinishLoadingWithTask:self];
     }
 }
 

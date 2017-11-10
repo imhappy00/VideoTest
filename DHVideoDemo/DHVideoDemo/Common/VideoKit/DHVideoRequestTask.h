@@ -26,7 +26,7 @@
 @property (assign, nonatomic) BOOL isFinishedLoad;
 @property (weak, nonatomic) id<DHVideoRequestTaskDelegate> delegate;
 
-- (void)setUrl:(NSURL *)url offset:(NSUInteger)offset;
+- (void)setUrl:(NSURL *)url offset:(NSUInteger)offset length:(NSUInteger)length;
 
 - (void)cancel;
 

@@ -123,13 +123,13 @@
     if (!self.task) {
         self.task = [[DHVideoRequestTask alloc] init];
         self.task.delegate = self;
-        [self.task setUrl:interceptedURL offset:0];
+        [self.task setUrl:interceptedURL offset:0 length:loadingRequest.dataRequest.requestedLength];
     } else {
         // 如果新的rang的起始位置比当前缓存的位置还大300k，则重新按照range请求数据
         if (self.task.offset + self.task.downLoadingOffset + 1024 * 300 < range.location ||
             // 如果往回拖也重新请求
             range.location < self.task.offset) {
-            [self.task setUrl:interceptedURL offset:range.location];
+            [self.task setUrl:interceptedURL offset:range.location length:loadingRequest.dataRequest.requestedLength];
         }
     }
 }
@@ -143,7 +143,9 @@
 {
     NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
     components.scheme = @"streaming";
-    return [components URL];
+    NSString *appendStr = components.query.length > 0 ? @"&" : @"?";
+    NSURL *assetURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@ORIUrl=%@", components.URL.absoluteString, appendStr, url.absoluteString]];
+    return assetURL;
 }
 #pragma mark - DHVideoRequestTaskDelegate
 - (void)task:(DHVideoRequestTask *)task didReceiveVideoLength:(NSUInteger)ideoLength mimeType:(NSString *)mimeType {
