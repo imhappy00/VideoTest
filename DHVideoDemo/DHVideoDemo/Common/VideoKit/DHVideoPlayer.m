@@ -454,12 +454,12 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
 - (AVPlayerItem *)currentPlayItem {
     if(!_currentPlayItem) {
         NSURL *playUrl  = [self.resouerLoader getSchemeVideoURL:[NSURL URLWithString:self.urlString]];
-//        self.videoURLAsset  = [[AVURLAsset alloc]initWithURL:playUrl options:nil];
-//        [self.videoURLAsset.resourceLoader setDelegate:self.resouerLoader queue:dispatch_get_main_queue()];
-//        _currentPlayItem = [AVPlayerItem playerItemWithAsset:self.videoURLAsset];
-        _currentPlayItem = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.urlString]];
+        self.videoURLAsset  = [[AVURLAsset alloc]initWithURL:playUrl options:nil];
+        [self.videoURLAsset.resourceLoader setDelegate:self.resouerLoader queue:dispatch_get_main_queue()];
+        _currentPlayItem = [AVPlayerItem playerItemWithAsset:self.videoURLAsset];
+//        _currentPlayItem = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.urlString]];
 //        //ios9以及以后
-//        _currentPlayItem.canUseNetworkResourcesForLiveStreamingWhilePaused = YES;
+        _currentPlayItem.canUseNetworkResourcesForLiveStreamingWhilePaused = YES;
     }
     return  _currentPlayItem;
 }
