@@ -242,7 +242,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         [self.contentView.layer insertSublayer:self.playerLayer atIndex:0];
         self.playerLayer.frame = self.contentView.layer.bounds;
         //视频的默认填充模式，AVLayerVideoGravityResizeAspect
-        self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+        self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
 //        [self.player]
         [self.player replaceCurrentItemWithPlayerItem:self.currentPlayItem];
         [self.player play];

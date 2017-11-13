@@ -144,6 +144,7 @@
 - (NSURL *)getSchemeVideoURL:(NSURL *)url
 {
     NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
+//    加一个自己定义的scheme系统不能识别然后就调用自己的request请求相应的数据用自己的request请求数据的时候再把scheme置换回来
     components.scheme = @"streaming";
     return [components URL];
 //    NSString *appendStr = components.query.length > 0 ? @"&" : @"?";
