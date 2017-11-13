@@ -15,6 +15,7 @@
 @implementation DHVideoListController
 - (void)setupViews {
     [self.view addSubview:self.player];
+//    [self.player play];
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

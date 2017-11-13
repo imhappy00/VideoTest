@@ -111,6 +111,8 @@
     return YES;
 }
 
+
+
 - (void)dealWithLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest
 {
     NSURL *interceptedURL = [loadingRequest.request URL];
@@ -143,9 +145,10 @@
 {
     NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
     components.scheme = @"streaming";
-    NSString *appendStr = components.query.length > 0 ? @"&" : @"?";
-    NSURL *assetURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@ORIUrl=%@", components.URL.absoluteString, appendStr, url.absoluteString]];
-    return assetURL;
+    return [components URL];
+//    NSString *appendStr = components.query.length > 0 ? @"&" : @"?";
+//    NSURL *assetURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@ORIUrl=%@", components.URL.absoluteString, appendStr, url.absoluteString]];
+//    return assetURL;
 }
 #pragma mark - DHVideoRequestTaskDelegate
 - (void)task:(DHVideoRequestTask *)task didReceiveVideoLength:(NSUInteger)ideoLength mimeType:(NSString *)mimeType {

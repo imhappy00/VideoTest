@@ -244,6 +244,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         //视频的默认填充模式，AVLayerVideoGravityResizeAspect
         self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
 //        [self.player]
+        [self.player replaceCurrentItemWithPlayerItem:self.currentPlayItem];
         [self.player play];
         self.playBtn.selected = NO;
         _isInitPlayer = YES;
@@ -459,7 +460,7 @@ static void *PlayerViewStatusChangeObservationContext = &PlayerViewStatusChangeO
         _currentPlayItem = [AVPlayerItem playerItemWithAsset:self.videoURLAsset];
 //        _currentPlayItem = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.urlString]];
 //        //ios9以及以后
-        _currentPlayItem.canUseNetworkResourcesForLiveStreamingWhilePaused = YES;
+//        _currentPlayItem.canUseNetworkResourcesForLiveStreamingWhilePaused = YES;
     }
     return  _currentPlayItem;
 }
